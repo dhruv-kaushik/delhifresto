@@ -1,0 +1,15 @@
+<svg width="160" height="120" viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="160" height="120" rx="16" fill="#FFF7ED"/>
+  <rect x="10" y="10" width="140" height="100" rx="14" fill="#FFEDD5"/>
+  <circle cx="56" cy="60" r="26" fill="#FDBA74"/>
+  <path d="M40 60C40 50 47 44 56 44C65 44 72 50 72 60C72 70 65 76 56 76C47 76 40 70 40 60Z" fill="#FEF3C7"/>
+  <path d="M52 52C52 50.3431 53.3431 49 55 49C56.6569 49 58 50.3431 58 52C58 55 55 55 55 58" stroke="#9A3412" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M65 52C65 50.3431 66.3431 49 68 49C69.6569 49 71 50.3431 71 52C71 55 68 55 68 58" stroke="#C2410C" stroke-width="1.5" stroke-linecap="round"/>
+  <rect x="82" y="48" width="40" height="26" rx="10" fill="#FFFBEB" stroke="#FDBA74" stroke-width="2"/>
+  <path d="M122 57C125 57 127.5 59.5 127.5 62.5C127.5 65.5 125 68 122 68H118" stroke="#FDBA74" stroke-width="2" stroke-linecap="round"/>
+  <path d="M86 54H114" stroke="#FED7AA" stroke-width="2" stroke-linecap="round"/>
+  <path d="M86 60H114" stroke="#FDBA74" stroke-width="2" stroke-linecap="round"/>
+  <path d="M86 66H108" stroke="#FDBA74" stroke-width="2" stroke-linecap="round"/>
+  <rect x="20" y="90" width="120" height="4" rx="2" fill="#FED7AA"/>
+  <text x="80" y="24" text-anchor="middle" fill="#9A3412" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" font-size="10" font-weight="600">Tea &amp; Coffee</text>
+</svg>
