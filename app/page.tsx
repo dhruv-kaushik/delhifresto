@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type MenuCategory =
   | "Soups"
@@ -557,7 +557,7 @@ const MENU: MenuItem[] = [
   },
   {
     id: "egg-corna",
-    name: "Egg Corna",
+    name: "Egg Korma",
     description: "Egg and corn style preparation.",
     price: 70,
     category: "Egg Corner",
@@ -1681,6 +1681,25 @@ const MENU: MenuItem[] = [
   },
 ];
 
+const FOOD_IMAGE_BASE = "/food-image";
+
+const FOOD_IMAGE_EXTENSION_MAP: Record<string, string> = {
+  "juice-pineapple-medium": ".jpeg",
+  "tea-choti": ".jpeg",
+  "mocktail-green-mint": ".png",
+  "egg-corna": ".jpeg",
+};
+
+const FOOD_IMAGE_ID_OVERRIDE: Record<string, string> = {
+  "mocktail-orange-qummin-middle": "orange-qummin-middle",
+};
+
+function getMenuImageSrc(item: MenuItem): string {
+  const overriddenId = FOOD_IMAGE_ID_OVERRIDE[item.id] ?? item.id;
+  const ext = FOOD_IMAGE_EXTENSION_MAP[overriddenId] ?? ".jpg";
+  return `${FOOD_IMAGE_BASE}/${overriddenId}${ext}`;
+}
+
 function formatCurrency(amount: number) {
   return `₹${amount.toFixed(0)}`;
 }
@@ -1728,16 +1747,12 @@ export default function Home() {
           item.description.toLowerCase().includes(lower) ||
           item.tags?.some((t) => t.toLowerCase().includes(lower))
         : true;
-      const matchesCategory =
-        activeCategory === "All" || item.category === activeCategory;
+      const matchesCategory = lower
+        ? true
+        : activeCategory === "All" || item.category === activeCategory;
       return matchesText && matchesCategory;
     });
   }, [search, activeCategory]);
-
-  const recommended = useMemo(
-    () => MENU.filter((item) => item.recommended),
-    [],
-  );
 
   const cartWithDetails = useMemo(() => {
     return cart
@@ -1753,10 +1768,12 @@ export default function Home() {
     (sum, item) => sum + item.quantity,
     0,
   );
-  const cartTotal = cartWithDetails.reduce(
+  const cartSubtotal = cartWithDetails.reduce(
     (sum, item) => sum + item.quantity * item.price,
     0,
   );
+  const extraCharge = cartSubtotal > 0 && cartSubtotal < 100 ? 10 : 0;
+  const cartTotal = cartSubtotal + extraCharge;
 
   function addToCart(id: string) {
     setCart((prev) => {
@@ -1838,13 +1855,44 @@ export default function Home() {
 
   const showCartBar = cartCount > 0 && step === "menu";
 
+  // Persist basic customer details so they auto-fill next time
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const savedName = window.localStorage.getItem("df_name");
+      const savedPhone = window.localStorage.getItem("df_phone");
+      const savedAddress = window.localStorage.getItem("df_address");
+      if (savedName) setName(savedName);
+      if (savedPhone) setPhone(savedPhone);
+      if (savedAddress) setAddress(savedAddress);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem("df_name", name);
+      window.localStorage.setItem("df_phone", phone);
+      window.localStorage.setItem("df_address", address);
+    } catch {
+      // ignore
+    }
+  }, [name, phone, address]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white pb-24">
       <header className="sticky top-0 z-20 border-b border-orange-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-orange-500 text-sm font-semibold text-white shadow-sm">
-              DF
+            <div className="relative h-9 w-9 overflow-hidden rounded-2xl bg-orange-500 shadow-sm">
+              <Image
+                src="/logo.jpg"
+                alt="Delhi Fresto logo"
+                fill
+                className="object-cover"
+              />
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-zinc-900">
@@ -1857,7 +1905,7 @@ export default function Home() {
           </div>
           <div className="text-right text-[11px] text-zinc-500">
             <div className="font-medium text-zinc-700">
-              Open • 8 AM – 8 PM
+              Open • 9 AM – 8 PM
             </div>
             <div>Mon–Sun • IIMT Ganganagar</div>
           </div>
@@ -1886,6 +1934,16 @@ export default function Home() {
                 <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-zinc-400">
                   🔍
                 </span>
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    className="absolute inset-y-0 right-3 flex items-center text-xs text-zinc-400 hover:text-zinc-600"
+                    aria-label="Clear search"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1 text-xs">
                 {categories.map((cat) => (
@@ -1908,60 +1966,6 @@ export default function Home() {
                 field.
               </p>
             </section>
-
-            {recommended.length > 0 && (
-              <section className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-zinc-900">
-                    Recommended for you
-                  </h2>
-                  <span className="text-[11px] text-orange-600">
-                    Chef&apos;s picks
-                  </span>
-                </div>
-                <div className="flex snap-x gap-3 overflow-x-auto pb-1">
-                  {recommended.map((item) => (
-                    <article
-                      key={item.id}
-                      className="relative flex w-56 shrink-0 snap-start flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-orange-50 via-white to-amber-50 p-3 shadow-sm ring-1 ring-orange-100/80"
-                    >
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <div className="space-y-1">
-                          <h3 className="text-sm font-semibold text-zinc-900">
-                            {item.name}
-                          </h3>
-                          <p className="line-clamp-2 text-[11px] text-zinc-500">
-                            {item.description}
-                          </p>
-                        </div>
-                        <div className="relative h-16 w-16 overflow-hidden rounded-2xl bg-white/70">
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            fill
-                            className="object-cover transition-transform duration-300 group-active:scale-95"
-                          />
-                        </div>
-                      </div>
-                      <div className="mt-auto flex items-center justify-between text-xs">
-                        <span className="font-semibold text-zinc-900">
-                          {formatCurrency(item.price)}
-                        </span>
-                        <button
-                          onClick={() => {
-                            addToCart(item.id);
-                            setCartOpen(true);
-                          }}
-                          className="rounded-full bg-zinc-900 px-3 py-1.5 text-[11px] font-medium text-white shadow-sm transition active:scale-95"
-                        >
-                          Add • {cart.find((c) => c.id === item.id)?.quantity ?? 0}
-                        </button>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </section>
-            )}
 
             <section className="space-y-2 pb-4">
               <h2 className="text-sm font-semibold text-zinc-900">
@@ -2037,7 +2041,7 @@ export default function Home() {
                     </div>
                     <div className="relative h-20 w-24 overflow-hidden rounded-2xl bg-zinc-100">
                       <Image
-                        src={item.image}
+                        src={getMenuImageSrc(item)}
                         alt={item.name}
                         fill
                         className="object-cover transition-transform duration-300 hover:scale-105"
@@ -2077,6 +2081,16 @@ export default function Home() {
                     <span>{formatCurrency(item.price * item.quantity)}</span>
                   </div>
                 ))}
+                <div className="mt-2 flex items-center justify-between pt-1 text-[11px] text-zinc-600">
+                  <span>Items total</span>
+                  <span>{formatCurrency(cartSubtotal)}</span>
+                </div>
+                {extraCharge > 0 && (
+                  <div className="flex items-center justify-between text-[11px] text-zinc-600">
+                    <span>Small order charge</span>
+                    <span>{formatCurrency(extraCharge)}</span>
+                  </div>
+                )}
                 <div className="mt-2 flex items-center justify-between border-t border-orange-200 pt-2 font-semibold">
                   <span>Total</span>
                   <span>{formatCurrency(cartTotal)}</span>
@@ -2169,6 +2183,12 @@ export default function Home() {
                   {formatCurrency(cartTotal)}
                 </span>
               </div>
+              {extraCharge > 0 && (
+                <div className="flex items-center justify-between text-[11px] text-zinc-500">
+                  <span>Includes small order charge</span>
+                  <span>{formatCurrency(extraCharge)}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-[11px] text-zinc-500">
                 <span>Delhi Fresto • IIMT Ganganagar</span>
                 <span>UPI demo only</span>
@@ -2178,7 +2198,7 @@ export default function Home() {
             <div className="flex flex-col items-center gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-100">
               <div className="relative h-52 w-52 overflow-hidden rounded-2xl bg-zinc-100">
                 <Image
-                  src="/payment/upi-demo-qr.svg"
+                  src="/payment/pymnt-qr-code.png"
                   alt="Scan this QR to pay"
                   fill
                   className="object-contain"

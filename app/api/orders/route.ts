@@ -42,3 +42,38 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function GET() {
+  try {
+    const client = await clientPromise;
+    const db = client.db(dbName);
+
+    const docs = await db
+      .collection("orders")
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    const orders = docs.map((doc) => ({
+      id: doc._id.toString(),
+      customerName: doc.customerName ?? "Guest",
+      phone: doc.phone ?? "",
+      address: doc.address ?? "",
+      note: doc.note ?? "",
+      items: doc.items ?? [],
+      totalAmount: doc.totalAmount ?? 0,
+      paymentStatus: doc.paymentStatus ?? "paid",
+      deliveryStatus: doc.deliveryStatus ?? "new",
+      deliveryArea: doc.deliveryArea ?? "",
+      createdAt: doc.createdAt ?? new Date(),
+    }));
+
+    return NextResponse.json({ ok: true, orders });
+  } catch (error) {
+    console.error("Error fetching orders", error);
+    return NextResponse.json(
+      { ok: false, error: "Failed to load orders" },
+      { status: 500 },
+    );
+  }
+}
